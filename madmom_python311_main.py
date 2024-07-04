@@ -7,7 +7,10 @@ Applies madmom DBNDownBeatTrackingProcessor() to get beat times and downbeats.
     - uses myDBNDownBeatTrackingProcessor() to operate in the current environment
 
 (c) Michael Gazier, 2024
-MIT License
+MIT License for my code
+Given parts of this code are essentially Madmom code, you should comply/check with the author Dr. Gerhard Widmer
+https://github.com/CPJKU/madmom
+Current web site https://www.jku.at/en/institute-of-computational-perception/about-us/people/gerhard-widmer/
 """
 import numpy as np
 from pydub import AudioSegment

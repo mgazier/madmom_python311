@@ -8,7 +8,10 @@ There are several minor but important issues i had with Python 3.11 that are fix
    after 2 dimensions. The detected shape was (2, 2) + inhomogeneous part.
 
 (c) MGazier, 2024
-MIT License
+MIT License for my code
+Given parts of this code are essentially Madmom code, you should comply/check with the author Dr. Gerhard Widmer
+https://github.com/CPJKU/madmom
+Current web site https://www.jku.at/en/institute-of-computational-perception/about-us/people/gerhard-widmer/
 
 Example usage with this code
   Main code does before using this code to get beat activations

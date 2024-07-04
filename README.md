@@ -22,8 +22,12 @@ This code is raw, lightly tested and meant to share ideas, it is far from a prod
 
 Sample output is simple: 
 ![minidemo1](https://github.com/mgazier/madmom_python311/blob/main/madmom_python311_1.jpeg)
+[...]
 ![minidemo2](https://github.com/mgazier/madmom_python311/blob/main/madmom_python311_2.jpeg)
 
 
 (c) Michael Gazier, 2023-2024 
-MIT License
+MIT License for my code
+Given parts of this code are essentially Madmom code, you should comply/check with the author Dr. Gerhard Widmer
+https://github.com/CPJKU/madmom
+Current web site https://www.jku.at/en/institute-of-computational-perception/about-us/people/gerhard-widmer/
