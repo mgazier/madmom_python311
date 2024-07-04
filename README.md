@@ -21,8 +21,8 @@
 This code is raw, lightly tested and meant to share ideas, it is far from a product.
 
 Sample output is simple: 
-![minidemo1](https://github.com/mgazier/madmom_python311/madmom_python311_1.jpeg)
-![minidemo2](https://github.com/mgazier/madmom_python311/madmom_python311_2.jpeg)
+![minidemo1](https://github.com/mgazier/madmom_python311/blob/main/madmom_python311_1.jpeg)
+![minidemo2](https://github.com/mgazier/madmom_python311/blob/main/madmom_python311_2.jpeg)
 
 
 (c) Michael Gazier, 2023-2024 
