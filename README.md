@@ -16,7 +16,6 @@
 - i put together a rough short program to test out and & debug my solution with Madmom
 	- i added some minimal non intrusive patches (subclass, aliases,..)
 - it appears to work well, although i haven't fully tested it yet
-- i'll be integrating & testing this into my actual project now that this works
 
 This code is raw, lightly tested and meant to share ideas, it is far from a product.
 
