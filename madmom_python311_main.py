@@ -6,20 +6,18 @@ Applies madmom RNNDownBeatProcessor() to get beat activations
 Applies madmom DBNDownBeatTrackingProcessor() to get beat times and downbeats.
     - uses myDBNDownBeatTrackingProcessor() to operate in the current environment
 
-(c) M Gazier, 2024
-MIT License for my code
-Given parts of this code are essentially Madmom code, you should comply/check with the author Dr. Gerhard Widmer
-https://github.com/CPJKU/madmom
-Current web site https://www.jku.at/en/institute-of-computational-perception/about-us/people/gerhard-widmer/
+(c) Michael Gazier, 2024
+MIT License
 """
-import numpy as np
 from pydub import AudioSegment
 import os
 import librosa
+from datetime import datetime
 
 # fix Python 3.11 issues in madmom
 import collections.abc
 collections.MutableSequence = collections.abc.MutableSequence  # Alias MutableSequence to avoid deprecation issues
+import numpy as np
 np.float = float
 np.int = int
 # import madmom
@@ -57,34 +55,40 @@ def get_waveform(path):
     print("Waveform loaded successfully.")
     return _samples, _sr
 
-def analyze(y, _sr, min_bpm=55, max_bpm=170):
+def analyze_audio_beats_and_bpm(audio, _sr, min_bpm=None, max_bpm=None):
     """
     Analyze audio data for beats, downbeats, tempo, and musical notes.
+    min_bpm and max_bpm None mean use defaults of 55 and 170
     """
     print("Analyzing audio data...")
-    _data = {
+    beat_data = {
         'sample_rate': _sr,
-        'duration': librosa.get_duration(y=y, sr=_sr),
+        'duration': librosa.get_duration(y=audio, sr=_sr),
     }
+    if min_bpm is None:
+        min_bpm = 55
+    if max_bpm is None:
+        max_bpm = 170
 
     # Processing beats and downbeats using the custom downbeat processor
-    print("Executing RNNDownBeatProcessor...")
+    print(f"Executing RNNDownBeatProcessor [slow, about 10 sec audio processed per second on MacM1max]...{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     downbeat_processor = RNNDownBeatProcessor()
-    activations = downbeat_processor(y)
+    activations = downbeat_processor(audio)
+    print(f"Done RNNDownBeatProcessor ...{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     # print("Processing activations with myDBNDownBeatTrackingProcessor...") # message in myDBNDownBeatTrackingProcessor() if quiet=False
-    dbn_processor = myDBNDownBeatTrackingProcessor(beats_per_bar=[3, 4], fps=100, min_bpm=min_bpm, max_bpm=max_bpm, quiet=False)
-    beats_and_downbeats = dbn_processor(activations)
+    dbn_processor = myDBNDownBeatTrackingProcessor(beats_per_bar=[3, 4], fps=100, min_bpm=min_bpm, max_bpm=max_bpm)
+    beats_and_downbeats = dbn_processor(activations, quiet=False)
 
     beat_times = beats_and_downbeats[:, 0]
-    beat_positions_in_bar = beats_and_downbeats[:, 1].astype(int)  # Ensuring positions are integer
+    beat_positions_in_bar = beats_and_downbeats[:, 1].astype(int)  #  # the beat # 1-3 or 1-4
 
     # Data aggregation for output
-    _data['number_of_beats'] = len(beat_times)
-    _data['beat_times'] = beat_times
+    beat_data['number_of_beats'] = len(beat_times)
+    beat_data['beat_times'] = beat_times
 
     # Extracting downbeats (first beat of each bar)
-    downbeats = beats_and_downbeats[beat_positions_in_bar == 1]
-    _data['downbeats'] = list(zip(downbeats[:, 0], ['Beat 1'] * len(downbeats)))  # assuming beat 1 represents downbeat
+    downbeats = beats_and_downbeats[beat_positions_in_bar == 1]  # the beat # 1-3 or 1-4
+    beat_data['downbeats'] = list(zip(downbeats[:, 0], ['Beat 1'] * len(downbeats)))  # assuming beat 1 represents downbeat
 
     # Compute the tempo if enough beats are detected
     if len(beat_times) > 1:
@@ -92,12 +96,12 @@ def analyze(y, _sr, min_bpm=55, max_bpm=170):
         tempo = 60 / np.median(intervals) if intervals.size > 0 else 0  # Median interval converted to BPM
     else:
         tempo = 0  # Default to zero if not enough beats to calculate intervals
-    _data['tempo_float'] = tempo
+    beat_data['tempo_float'] = tempo
 
     print("Extracting spectral features... ")
     print("Lists the notes / intensity at each beat ordered by their chroma intensity from highest to lowest.")
     try:
-        chroma = librosa.feature.chroma_cqt(y=y, sr=_sr, hop_length=512)
+        chroma = librosa.feature.chroma_cqt(y=audio, sr=_sr, hop_length=512)
         frame_times = librosa.frames_to_time(range(chroma.shape[1]), sr=_sr, hop_length=512)
         note_names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
@@ -113,73 +117,54 @@ def analyze(y, _sr, min_bpm=55, max_bpm=170):
             for frame in beat_frames
         ]
 
+        # time_signature 3/4 or 4/4 for this audio segment
+        largest_beat_number = max(beat_positions_in_bar) # max of beat+number 1-3 or 1-4
+        beat_data['time_signature'] = f"{largest_beat_number}/4"
+
         # Combining beat positions, times, and notes
-        _data['all_beats'] = list(zip(range(len(beat_times)), beat_times, beat_positions_in_bar, beat_notes))
+        beat_data['all_beats'] = list(zip(range(len(beat_times)), beat_times, beat_positions_in_bar, beat_notes))
     except Exception as e:
         print(f"Error processing chroma features: {e}")
-        _data.update({'notes': [0], 'dominant_note': 0})
+        beat_data.update({'notes': [0], 'dominant_note': 0})
 
     print("Completed audio analysis...")
-    return _data
+    return beat_data
 
-def print_data(_data, _filename):
+def print_data(_beat_data, _filename, quiet=True):
     """
     Print the results of the audio analysis.
+    quiet True means don't print all detected beats and notes [chroma]
     """
     print(f"\nRESULTS OF ANALYSIS for '{_filename}'\n=========================================")
 
     # Printing detailed information about beats and downbeats
-    print(f"All Detected Beats (index, beat #, time, and note with chroma [0-1, cutoff notes at {MIN_CHROMA}]):")
+    if not quiet:
+        print(f"All Detected Beats (index, beat #, time, and note with chroma [0-1, cutoff notes at {MIN_CHROMA}]):")
 
-    for idx, time, beat_num, notes in _data['all_beats']:
-        minutes, seconds = divmod(time, 60)
-        time_str = f"{int(minutes)}m:{seconds:.2f}s"
-        notes_str = ', '.join(notes)
-        print(f"Index: {idx}, Beat #: {beat_num}, Time: {time_str}, Notes: {notes_str}")
-
-    # Printing basic audio and analysis metrics
-    print("\nGeneral Analysis Results:")
-    print(f"Sample Rate: {_data['sample_rate']} Hz")
-    minutes, seconds = divmod(_data['duration'], 60)
-    time_str = f"{int(minutes)}m:{seconds:.2f}s"
-    print(f"Total Duration: {time_str}")
-    print(f"Total Number of Beats: {_data['number_of_beats']}")
-    # Printing tempo calculated from beat intervals
-    print(f"Calculated Tempo: {_data['tempo_float']:.1f} BPM")
-
-def print_data(_data, _filename):
-    """
-    Print the results of the audio analysis.
-    """
-    print(f"\nRESULTS OF ANALYSIS for {_filename}\n=========================================")
-
-    # Printing detailed information about beats and downbeats
-    print(f"All Detected Beats (index, beat #, time, and note with chroma >= {MIN_CHROMA} [chroma = 0-1 = harmonic content of the audio at each beat]):")
-
-    for idx, time, beat_num, notes in _data['all_beats']:
-        minutes, seconds = divmod(time, 60)
-        time_str = f"{int(minutes)}m:{seconds:.2f}s"
-        note_names = ', '.join([note for note, _ in notes])
-        chroma_values = ', '.join([f"{chroma:.2f}" for _, chroma in notes])
-        notes_str = f"{note_names} [{chroma_values}]"
-        print(f"Index: {idx}, Beat #: {beat_num}, Time: {time_str}, Notes [Chroma]: {notes_str}")
+        for idx, time, beat_num, notes in _beat_data['all_beats']:
+            minutes, seconds = divmod(time, 60)
+            time_str = f"{int(minutes)}m:{seconds:.2f}s"
+            notes_str = ', '.join([f"{note} [{chroma:.2f}]" for note, chroma in notes])
+            print(f"Index: {idx}, Beat #: {beat_num}, Time: {time_str}, Notes: {notes_str}")
 
     # Printing basic audio and analysis metrics
     print("\nGeneral Analysis Results:")
-    print(f"Sample Rate: {_data['sample_rate']} Hz")
-    minutes, seconds = divmod(_data['duration'], 60)
+    print(f"Sample Rate: {_beat_data['sample_rate']} Hz")
+    minutes, seconds = divmod(_beat_data['duration'], 60)
     time_str = f"{int(minutes)}m:{seconds:.2f}s"
     print(f"Total Duration: {time_str}")
-    print(f"Total Number of Beats: {_data['number_of_beats']}")
+    print(f"Total Number of Beats: {_beat_data['number_of_beats']}")
     # Printing tempo calculated from beat intervals
-    print(f"Calculated Tempo: {_data['tempo_float']:.1f} BPM")
+    print(f"Calculated Tempo: {_beat_data['tempo_float']:.1f} BPM")
+    print(f"Time signature: {_beat_data['time_signature']}") # time_signature 3/4 or 4/4 (string)
 
 if __name__ == '__main__':
-    ROOT_DIR = "/my/root/path/"
+    ROOT_DIR = "/My/Path/"
     filename = "downbeat tracker test.m4a"
     filePath = os.path.join(ROOT_DIR, filename)
-    samples, sr = get_waveform(filePath) # should be 44.1kHz
+    samples, sr = get_waveform(filePath)
+    # should be 44.1kHz
     MIN_CHROMA = 0.4  # default is 0.5
-    data = analyze(samples, sr)
-    print_data(data, filename)
-    print("Analysis complete.")
+    data = analyze_audio_beats_and_bpm(samples, sr, min_bpm=None, max_bpm=None)
+    print_data(data, filename, quiet = False)
+ 

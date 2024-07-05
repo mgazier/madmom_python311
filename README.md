@@ -14,13 +14,13 @@
 
 # So ..
 - i put together a rough short program to test out and & debug my solution with Madmom
-	- i added some minimal non intrusive patches (subclass, aliases,..)
+	- i added some minimal non intrusive patches (subclass, aliases,..) as i didn't want to change the Madmom source etc.
 - it appears to work well, although i haven't fully tested it yet
 
 This code is raw, lightly tested and meant to share ideas, it is far from a product.
 
 Output is simple and its general analysis is at the end
-	- i didn't add the time signature in this version but you can see it in the beat #'s and should be trivial to add
+
 ![minidemo1](https://github.com/mgazier/madmom_python311/blob/main/madmom_python311_1.jpeg)
 [...]
 ![minidemo2](https://github.com/mgazier/madmom_python311/blob/main/madmom_python311_2.jpeg)

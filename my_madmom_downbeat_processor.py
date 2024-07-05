@@ -1,17 +1,14 @@
 """
 Demo for use of madmom with Python 3.11
 
-There are several minor but important issues i had with Python 3.11 that are fixed in this code
+There are several minor but important issues with Python 3.11 that are fixed in this code
 1- alias
 2- subclass to avoid strange error possibly due to np handling between python and support library versions
    ValueError: setting an array element with a sequence. The requested array has an inhomogeneous shape
    after 2 dimensions. The detected shape was (2, 2) + inhomogeneous part.
 
 (c) MGazier, 2024
-MIT License for my code
-Given parts of this code are essentially Madmom code, you should comply/check with the author Dr. Gerhard Widmer
-https://github.com/CPJKU/madmom
-Current web site https://www.jku.at/en/institute-of-computational-perception/about-us/people/gerhard-widmer/
+MIT License
 
 Example usage with this code
   Main code does before using this code to get beat activations
@@ -27,6 +24,7 @@ beats_and_downbeats = proc(activations)
 """
 
 import numpy as np
+from datetime import datetime
 
 # fix (patch) Python 3.11 issues in madmom
 import collections.abc
@@ -76,10 +74,11 @@ class myDBNDownBeatTrackingProcessor(DBNDownBeatTrackingProcessor):
             Detected (down-)beat positions [seconds] and beat numbers.
 
         """
-        print("Processing activations with my DBNDownBeatTrackingProcessor...")
+        print(f"Processing activations with my DBNDownBeatTrackingProcessor... {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         import itertools as it # done here to be similar to original DBNDownBeatTrackingProcessor
         if not quiet:
             print("myDBNDownBeatTrackingProcessor(DBNDownBeatTrackingProcessor) processing of activations")
+        first = 0
         if self.threshold:
             # this was def threshold_activations(activations, threshold):
             idx = np.nonzero(activations >= self.threshold)[0]
@@ -126,7 +125,7 @@ class myDBNDownBeatTrackingProcessor(DBNDownBeatTrackingProcessor):
         beat_info = np.vstack((beat_times, beat_numbers[beats])).T
 
         if not quiet:
-            print("myDBNDownBeatTrackingProcessor(DBNDownBeatTrackingProcessor) beat_times and beat_numbers complete")
+            print(f"myDBNDownBeatTrackingProcessor(DBNDownBeatTrackingProcessor) beat_times and beat_numbers complete... {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         return beat_info
 
     def _correct_beats(self, activations, path, observation_model):
