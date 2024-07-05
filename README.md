@@ -5,8 +5,8 @@
 - use Madmom to determine time signature (3/4 or 4/4), beats per minute (BPM), and the beat # in the measure including downbeat
    1- RNNDownBeatProcessor()
    2- DBNDownBeatTrackingProcessor()
-- i also played a bit with librosa's chroma_cqt() for note detection - not a primary goal just to explore including time synch
-- it appears signficantly more precise than librosa tempo estimation although it's much slower - addressing gpu support would be ideal
+- i also played a bit with librosa's chroma_cqt() for note detection - not a need, just to explore including time synch
+- Madmom appears signficantly more precise than librosa tempo estimation although it's much slower - addressing gpu support would be ideal
 
 # Why
 - There are compatibility issues between Python 3.11 and Madmom and numpy (Jun 2024)
@@ -19,7 +19,8 @@
 
 This code is raw, lightly tested and meant to share ideas, it is far from a product.
 
-Output is simple with its final analysis is at the end (i didn't out the time signature in this version but you can see it in the beat #'s) : 
+Output is simple and its general analysis is at the end
+	- i didn't add the time signature in this version but you can see it in the beat #'s and should be trivial to add
 ![minidemo1](https://github.com/mgazier/madmom_python311/blob/main/madmom_python311_1.jpeg)
 [...]
 ![minidemo2](https://github.com/mgazier/madmom_python311/blob/main/madmom_python311_2.jpeg)
