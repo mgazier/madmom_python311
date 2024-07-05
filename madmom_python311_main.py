@@ -6,7 +6,7 @@ Applies madmom RNNDownBeatProcessor() to get beat activations
 Applies madmom DBNDownBeatTrackingProcessor() to get beat times and downbeats.
     - uses myDBNDownBeatTrackingProcessor() to operate in the current environment
 
-(c) Michael Gazier, 2024
+(c) M Gazier, 2024
 MIT License for my code
 Given parts of this code are essentially Madmom code, you should comply/check with the author Dr. Gerhard Widmer
 https://github.com/CPJKU/madmom
